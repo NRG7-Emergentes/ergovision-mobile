@@ -1,4 +1,4 @@
-import 'package:ergovision/shared/views/login.dart';
+import 'package:ergovision/shared/views/sign-in.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF2A3A4A)),
       ),
-      home: const Login()
+      home: const SignIn()
     );
   }
 }
