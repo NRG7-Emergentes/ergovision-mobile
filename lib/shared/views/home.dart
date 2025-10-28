@@ -27,7 +27,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
       body: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
         child: pages[currentIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
