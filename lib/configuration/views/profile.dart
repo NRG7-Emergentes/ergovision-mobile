@@ -13,12 +13,13 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
       body: Column(
-        children: const [
-          Center(
-            child: Text(
-              'Profile View',
-              style: TextStyle(color: Colors.white, fontSize: 24),
-            ),
+        children: [
+          const SizedBox(
+              width: double.infinity,
+              child: Text(
+                'Profile',
+                style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+              )
           ),
         ],
       ),

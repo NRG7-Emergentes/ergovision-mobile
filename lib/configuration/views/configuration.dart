@@ -13,14 +13,15 @@ class _ConfigurationState extends State<Configuration> {
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
       body: Column(
-        children: const [
-          Center(
-            child: Text(
-              'Configuration View',
-              style: TextStyle(color: Colors.white, fontSize: 24),
-            ),
+        children: [
+          const SizedBox(
+              width: double.infinity,
+              child: Text(
+                'Configuration',
+                style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+              )
           ),
-        ],
+        ]
       ),
     );
 

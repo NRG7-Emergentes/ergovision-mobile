@@ -13,12 +13,13 @@ class _SessionsState extends State<Sessions> {
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
       body: Column(
-        children: const [
-          Center(
-            child: Text(
-              'Sessions View',
-              style: TextStyle(color: Colors.white, fontSize: 24),
-            ),
+        children: [
+          const SizedBox(
+              width: double.infinity,
+              child: Text(
+                'Sessions',
+                style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+              )
           ),
         ],
       ),
