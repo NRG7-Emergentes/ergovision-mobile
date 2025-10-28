@@ -13,8 +13,14 @@ class SignIn extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
-      body: Padding(
-        padding: const EdgeInsets.all(40.0),
+      body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.only(
+          left: 40,
+          right: 40,
+          top: 40,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,

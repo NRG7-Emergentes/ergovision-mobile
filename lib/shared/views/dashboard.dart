@@ -9,7 +9,7 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  final days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  final days = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
   final values = [60.0, 80.0, 40.0, 90.0, 70.0, 50.0, 30.0];
 
   @override
@@ -314,7 +314,7 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 5),
+                      SizedBox(height: 10),
                       SizedBox(
                         child: AspectRatio(
                           aspectRatio: 1.2,
