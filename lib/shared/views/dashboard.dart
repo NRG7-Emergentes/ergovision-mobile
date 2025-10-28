@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class Dashboard extends StatefulWidget {
@@ -8,6 +9,9 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  final days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  final values = [60.0, 80.0, 40.0, 90.0, 70.0, 50.0, 30.0];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,11 +316,87 @@ class _DashboardState extends State<Dashboard> {
                       ),
                       SizedBox(height: 5),
                       SizedBox(
-                        height: 150,
-                        child: Center(
-                          child: Text(
-                            'Graph Placeholder',
-                            style: TextStyle(color: Colors.white30, fontSize: 16, fontStyle: FontStyle.italic),
+                        child: AspectRatio(
+                          aspectRatio: 1.2,
+                          child: BarChart(
+                            BarChartData(
+                              maxY: 100,
+                              minY: 0,
+                              alignment: BarChartAlignment.spaceAround,
+                              gridData: FlGridData(
+                                show: true,
+                                drawHorizontalLine: true,
+                                horizontalInterval: 10,
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: Colors.white24,
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 10,
+                                    getTitlesWidget: (double value, TitleMeta meta) {
+                                      return SideTitleWidget(
+                                        meta: meta,
+                                        child: Text(
+                                          value.toInt().toString(),
+                                          style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                        ),
+                                      );
+                                    },
+                                    reservedSize: 30,
+                                  ),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 1,
+                                    getTitlesWidget: (double value, TitleMeta meta) {
+                                      final i = value.toInt();
+                                      if (i < 0 || i >= days.length) return const SizedBox();
+                                      return SideTitleWidget(
+                                        meta: meta,
+                                        child: Text(
+                                          days[i],
+                                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                        ),
+                                      );
+                                    },
+                                    reservedSize: 36,
+                                  ),
+                                ),
+                                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              barGroups: List.generate(days.length, (index) {
+                                return BarChartGroupData(
+                                  x: index,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: values[index],
+                                      width: 15,
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ],
+                                  showingTooltipIndicators: [], // no mostrar etiquetas fijas
+                                );
+                              }),
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                    return BarTooltipItem(
+                                      '${days[groupIndex]}: ${rod.toY.toInt()}',
+                                      const TextStyle(color: Colors.white),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       )
