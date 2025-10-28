@@ -1,3 +1,5 @@
+import 'package:ergovision/shared/views/home.dart';
+import 'package:ergovision/shared/views/sign-up.dart';
 import 'package:flutter/material.dart';
 
 class SignIn extends StatelessWidget {
@@ -6,8 +8,8 @@ class SignIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
+    final TextEditingController usernameController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
 
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
@@ -45,8 +47,7 @@ class SignIn extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _usernameController,
-              obscureText: true,
+              controller: usernameController,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                 labelText: 'Insert Username',
@@ -61,7 +62,7 @@ class SignIn extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _passwordController,
+              controller: passwordController,
               style: const TextStyle(color: Colors.white),
               obscureText: true,
               decoration: const InputDecoration(
@@ -79,7 +80,12 @@ class SignIn extends StatelessWidget {
             SizedBox(
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement login logic here
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const Home()
+                      )
+                  );
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
@@ -105,7 +111,12 @@ class SignIn extends StatelessWidget {
             SizedBox(
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement login logic here
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignUp()
+                      )
+                  );
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
