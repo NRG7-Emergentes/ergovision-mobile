@@ -139,73 +139,77 @@ Widget _buildSessionCards(List<Session> sessions) {
         }
       }
       
-      return InkWell(
-        onTap: () {
-          // Handle session tap (p. ej. navegar a detalle)
-        },
-        child: Card(
-          color: const Color(0xFF1A2332),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(
-              color: Color(0xFF2A3A4A),
-              width: 2,
-            ),
-          ),
-          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0.0),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      return Column(
+        children: [
+          InkWell(
+            onTap: () {
+              // Handle session tap (p. ej. navegar a detalle)
+            },
+            child: Card(
+              color: const Color(0xFF1A2332),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(
+                  color: Color(0xFF2A3A4A),
+                  width: 2,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Row(
                     children: [
-                      Text(
-                        id,
-                        style: const TextStyle(color: Colors.white54, fontSize: 14),
-                      ),
-                      SizedBox(height: 5),
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: CircleAvatar(
-                              backgroundColor: getColorByScore(score),
-                              child: Text(
-                                '$score'
-                              ),
-                            ),
+                          Text(
+                            id,
+                            style: const TextStyle(color: Colors.white54, fontSize: 14),
                           ),
-                          SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          SizedBox(height: 5),
+                          Row(
                             children: [
-                              Text(
-                                'Session of: $dateLabel',
-                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                              SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: CircleAvatar(
+                                  backgroundColor: getColorByScore(score),
+                                  child: Text(
+                                    '$score'
+                                  ),
+                                ),
                               ),
-                              Text(
-                                'Duration • $durationLabel',
-                                style: const TextStyle(color: Colors.white54, fontSize: 16),
-                              ),
+                              SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Session of: $dateLabel',
+                                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Duration • $durationLabel',
+                                    style: const TextStyle(color: Colors.white54, fontSize: 16),
+                                  ),
 
+                                ],
+                              ),
                             ],
                           ),
+
                         ],
                       ),
-
+                      Spacer(),
+                      Icon(Icons.arrow_forward_ios, color: Colors.white54),
                     ],
                   ),
-                  Spacer(),
-                  Icon(Icons.arrow_forward_ios, color: Colors.white54),
-                ],
-              ),
+                ),
+              )
             ),
-          )
-        ),
+          ),
+          SizedBox(height: 10)
+        ],
       );
     }).toList(),
   );
