@@ -1,0 +1,74 @@
+import '../model/session.dart';
+
+/// Lista de sesiones de ejemplo usando el modelo existente `Session`.
+/// Notas:
+/// - `startDate` y `endDate` son strings en formato ISO 8601 (ej: 2025-10-07T05:12:50.495696Z)
+/// - Las duraciones (`duration`, `goodPostureTime`, `badPostureTime`, `averagePauseDuration`) se almacenan en milisegundos (double)
+final List<Session> sampleSessions = [
+  Session(
+    id: '5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9d0c',
+    startDate: '2025-10-20T10:00:00.000Z',
+    endDate: '2025-10-20T10:45:00.000Z',
+    score: 82.5,
+    goodScore: 70.0,
+    badScore: 12.5,
+    goodPostureTime: 30 * 60 * 1000.0, // 30 min -> ms
+    badPostureTime: 15 * 60 * 1000.0, // 15 min -> ms
+    duration: 45 * 60 * 1000.0, // 45 min -> ms
+    numberOfPauses: 2,
+    averagePauseDuration: 45 * 1000.0, // 45s -> ms
+  ),
+  Session(
+    id: '9d0c1b2a-3c4d-5e6f-7a8b-9c0d1e2f3a4b',
+    startDate: '2025-10-18T09:30:00.000Z',
+    endDate: '2025-10-18T10:00:00.000Z',
+    score: 76.0,
+    goodScore: 60.0,
+    badScore: 16.0,
+    goodPostureTime: 18 * 60 * 1000.0,
+    badPostureTime: 12 * 60 * 1000.0,
+    duration: 30 * 60 * 1000.0,
+    numberOfPauses: 1,
+    averagePauseDuration: 30 * 1000.0,
+  ),
+  Session(
+    id: '3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d',
+    startDate: '2025-10-14T11:00:00.000Z',
+    endDate: '2025-10-14T12:00:00.000Z',
+    score: 90.0,
+    goodScore: 85.0,
+    badScore: 5.0,
+    goodPostureTime: 50 * 60 * 1000.0,
+    badPostureTime: 10 * 60 * 1000.0,
+    duration: 60 * 60 * 1000.0,
+    numberOfPauses: 0,
+    averagePauseDuration: 0.0,
+  ),
+  Session(
+    id: '7f8e9d0c-1b2a-3c4d-5e6f-7a8b9c0d1e2f',
+    startDate: '2025-10-11T15:00:00.000Z',
+    endDate: '2025-10-11T15:25:00.000Z',
+    score: 68.0,
+    goodScore: 45.0,
+    badScore: 23.0,
+    goodPostureTime: 10 * 60 * 1000.0,
+    badPostureTime: 15 * 60 * 1000.0,
+    duration: 25 * 60 * 1000.0,
+    numberOfPauses: 3,
+    averagePauseDuration: 60 * 1000.0,
+  ),
+  Session(
+    id: '1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b',
+    startDate: '2025-10-07T14:00:00.000Z',
+    endDate: '2025-10-07T14:20:00.000Z',
+    score: 21.0,
+    goodScore: 55.0,
+    badScore: 19.0,
+    goodPostureTime: 12 * 60 * 1000.0,
+    badPostureTime: 8 * 60 * 1000.0,
+    duration: 20 * 60 * 1000.0,
+    numberOfPauses: 1,
+    averagePauseDuration: 30 * 1000.0,
+  )
+];
+
