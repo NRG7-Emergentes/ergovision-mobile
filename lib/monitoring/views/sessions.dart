@@ -1,3 +1,4 @@
+import 'package:ergovision/monitoring/views/session_detail.dart';
 import 'package:flutter/material.dart';
 
 import '../model/session.dart';
@@ -37,7 +38,7 @@ class _SessionsState extends State<Sessions> {
                 )
             ),
             const SizedBox(height: 10),
-            _buildSessionCards(sessions)
+            _buildSessionCards(context, sessions)
           ],
         ),
       ),
@@ -46,7 +47,7 @@ class _SessionsState extends State<Sessions> {
   }
 }
 
-Widget _buildSessionCards(List<Session> sessions) {
+Widget _buildSessionCards(BuildContext context, List<Session> sessions) {
 
   String formatDateTimeLocal(DateTime dt) {
     // Formatea como DD/MM/YYYY HH:MM (hora local)
@@ -125,9 +126,9 @@ Widget _buildSessionCards(List<Session> sessions) {
       // Título: preferir map de muestras; si no existe usar fallback
       final String id = session.id;
 
-      final int score = session.score.round();
+      final double score = session.score;
 
-      Color getColorByScore(int score) {
+      Color getColorByScore(double score) {
         if (score >= 0 && score <= 30) {
           return Colors.red;
         } else if (score >= 31 && score <= 70) {
@@ -143,7 +144,12 @@ Widget _buildSessionCards(List<Session> sessions) {
         children: [
           InkWell(
             onTap: () {
-              // Handle session tap (p. ej. navegar a detalle)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SessionDetail(sessionId: id),
+                ),
+              );
             },
             child: Card(
               color: const Color(0xFF1A2332),
@@ -185,14 +191,13 @@ Widget _buildSessionCards(List<Session> sessions) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Session of: $dateLabel',
+                                    'Session of $dateLabel',
                                     style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                                   ),
                                   Text(
                                     'Duration • $durationLabel',
                                     style: const TextStyle(color: Colors.white54, fontSize: 16),
                                   ),
-
                                 ],
                               ),
                             ],
