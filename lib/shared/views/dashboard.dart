@@ -314,7 +314,7 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 20),
                       SizedBox(
                         child: AspectRatio(
                           aspectRatio: 1.2,
@@ -326,6 +326,7 @@ class _DashboardState extends State<Dashboard> {
                               gridData: FlGridData(
                                 show: true,
                                 drawHorizontalLine: true,
+                                drawVerticalLine: false,
                                 horizontalInterval: 10,
                                 getDrawingHorizontalLine: (value) => FlLine(
                                   color: Colors.white24,
@@ -336,17 +337,17 @@ class _DashboardState extends State<Dashboard> {
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
-                                    interval: 10,
+                                    interval: 20,
                                     getTitlesWidget: (double value, TitleMeta meta) {
                                       return SideTitleWidget(
                                         meta: meta,
                                         child: Text(
                                           value.toInt().toString(),
-                                          style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                          style: const TextStyle(color: Colors.white, fontSize: 14),
                                         ),
                                       );
                                     },
-                                    reservedSize: 30,
+                                    reservedSize: 36,
                                   ),
                                 ),
                                 bottomTitles: AxisTitles(
@@ -360,7 +361,7 @@ class _DashboardState extends State<Dashboard> {
                                         meta: meta,
                                         child: Text(
                                           days[i],
-                                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                          style: const TextStyle(color: Colors.white, fontSize: 14),
                                         ),
                                       );
                                     },
@@ -370,7 +371,15 @@ class _DashboardState extends State<Dashboard> {
                                 topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                 rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                               ),
-                              borderData: FlBorderData(show: false),
+                              borderData: FlBorderData(
+                                show: true,
+                                border: const Border(
+                                  left: BorderSide(color: Colors.white54, width: 1),
+                                  bottom: BorderSide(color: Colors.white54, width: 1),
+                                  right: BorderSide.none,
+                                  top: BorderSide.none,
+                                ),
+                              ),
                               barGroups: List.generate(days.length, (index) {
                                 return BarChartGroupData(
                                   x: index,
