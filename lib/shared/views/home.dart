@@ -1,4 +1,4 @@
-import 'package:ergovision/configuration/views/configuration.dart';
+import 'package:ergovision/configuration/views/settings.dart';
 import 'package:ergovision/configuration/views/profile.dart';
 import 'package:ergovision/monitoring/views/sessions.dart';
 import 'package:ergovision/shared/views/dashboard.dart';
@@ -19,7 +19,7 @@ class _HomeState extends State<Home> {
     Sessions(),
     Statistics(),
     Profile(),
-    Configuration()
+    Settings()
   ];
 
   @override
