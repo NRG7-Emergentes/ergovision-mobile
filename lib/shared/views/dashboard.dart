@@ -1,3 +1,4 @@
+import 'package:ergovision/monitoring/component/active_pause.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -26,6 +27,8 @@ class _DashboardState extends State<Dashboard> {
                   style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
                 )
             ),
+            const SizedBox(height: 10),
+            ActivePause(),
             const SizedBox(height: 10),
             SizedBox(
                 width: double.infinity,
