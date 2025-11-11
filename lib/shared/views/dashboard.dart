@@ -1,4 +1,5 @@
 import 'package:ergovision/monitoring/component/active_pause.dart';
+import 'package:ergovision/monitoring/component/notification_listener.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +30,9 @@ class _DashboardState extends State<Dashboard> {
             ),
             const SizedBox(height: 10),
             ActivePause(),
+            const SizedBox(height: 10),
+            // Notification listener shows last received message and triggers snackbars
+            NotificationListenerWidget(),
             const SizedBox(height: 10),
             SizedBox(
                 width: double.infinity,
