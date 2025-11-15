@@ -3,14 +3,26 @@ import 'package:ergovision/shared/views/sign-up.dart';
 import 'package:flutter/material.dart';
 import 'package:ergovision/shared/services/auth_service.dart';
 
-class SignIn extends StatelessWidget {
+class SignIn extends StatefulWidget {
   const SignIn({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<SignIn> createState() => _SignInState();
+}
 
-    final TextEditingController usernameController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
+class _SignInState extends State<SignIn> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
