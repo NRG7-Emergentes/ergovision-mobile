@@ -1,6 +1,7 @@
 import 'package:ergovision/shared/views/home.dart';
 import 'package:ergovision/shared/views/sign-up.dart';
 import 'package:flutter/material.dart';
+import 'package:ergovision/shared/services/auth_service.dart';
 
 class SignIn extends StatelessWidget {
   const SignIn({super.key});
@@ -85,12 +86,13 @@ class SignIn extends StatelessWidget {
             const SizedBox(height: 30),
             SizedBox(
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  // TODO: Replace with the JWT returned by your backend
+                  await AuthService.instance.saveToken('DEMO_JWT_TOKEN');
+
                   Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const Home()
-                      )
+                    context,
+                    MaterialPageRoute(builder: (context) => const Home()),
                   );
                 },
                 style: ButtonStyle(

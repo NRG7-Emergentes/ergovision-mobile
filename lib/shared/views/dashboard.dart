@@ -2,6 +2,7 @@ import 'package:ergovision/monitoring/component/active_pause.dart';
 import 'package:ergovision/monitoring/component/notification_listener.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:ergovision/shared/services/auth_service.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -13,6 +14,30 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   final days = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
   final values = [60.0, 80.0, 40.0, 90.0, 70.0, 50.0, 30.0];
+
+  final NotificationListenerService _wsService = NotificationListenerService();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeWebSocket();
+  }
+
+  Future<void> _initializeWebSocket() async {
+    // Clean quotes just in case
+    final token = AuthService.instance.token?.replaceAll('"', '');
+    if (token != null && token.isNotEmpty) {
+      await _wsService.connect(token);
+    } else {
+      debugPrint("[Dashboard] No token found, WS not connected");
+    }
+  }
+
+  @override
+  void dispose() {
+    _wsService.disconnect();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +54,88 @@ class _DashboardState extends State<Dashboard> {
                 )
             ),
             const SizedBox(height: 10),
-            ActivePause(),
+            // Active Pause + Real-time notification info merged
+            Column(
+              children: [
+                ActivePause(),
+                const SizedBox(height: 8),
+                ValueListenableBuilder<Map<String, dynamic>?>(
+                  valueListenable:
+                  NotificationListenerService().latestNotification,
+                  builder: (_, notif, __) {
+                    if (notif == null) {
+                      return const SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          'No active notification',
+                          style: TextStyle(color: Colors.white54),
+                          textAlign: TextAlign.left,
+                        ),
+                      );
+                    }
+                    final title = (notif['title'] ?? '').toString();
+                    final msg = (notif['message'] ?? '').toString();
+                    return SizedBox(
+                      width: double.infinity,
+                      child: Card(
+                        color: const Color(0xFF1A2332),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFF2A3A4A),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                title.toUpperCase().contains('PAUSED')
+                                    ? Icons.pause_circle_filled
+                                    : Icons.play_circle_fill,
+                                color: title.toUpperCase().contains('PAUSED')
+                                    ? Colors.amber
+                                    : Colors.greenAccent,
+                                size: 30,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title.isEmpty
+                                          ? 'Monitoring Update'
+                                          : title,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    if (msg.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        msg,
+                                        style: const TextStyle(
+                                            color: Colors.white70, fontSize: 13),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
-            // Notification listener shows last received message and triggers snackbars
-            NotificationListenerWidget(),
+            // Notification widget (single latest)
+            const NotificationListenerWidget(),
             const SizedBox(height: 10),
             SizedBox(
                 width: double.infinity,

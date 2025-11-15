@@ -38,6 +38,7 @@ dependencies:
   intl: ^0.18.1
   web_socket_channel: ^3.0.3
   stomp_dart_client: ^2.1.0
+  shared_preferences: ^2.2.2
 
 dependency_overrides:
   vector_math: ^2.1.4

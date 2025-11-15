@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.nrg.ergovision"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Replace Flutter’s default with the required NDK version
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
