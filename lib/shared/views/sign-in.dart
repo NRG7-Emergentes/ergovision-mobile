@@ -1,18 +1,39 @@
+import 'package:ergovision/shared/views/home.dart';
+import 'package:ergovision/shared/views/sign-up.dart';
 import 'package:flutter/material.dart';
+import 'package:ergovision/shared/services/auth_service.dart';
 
-class Login extends StatelessWidget {
-  const Login({super.key});
+class SignIn extends StatefulWidget {
+  const SignIn({super.key});
+
+  @override
+  State<SignIn> createState() => _SignInState();
+}
+
+class _SignInState extends State<SignIn> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
 
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
-      body: Padding(
-        padding: const EdgeInsets.all(40.0),
+      body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.only(
+          left: 40,
+          right: 40,
+          top: 40,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -45,8 +66,7 @@ class Login extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _usernameController,
-              obscureText: true,
+              controller: usernameController,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                 labelText: 'Insert Username',
@@ -61,7 +81,7 @@ class Login extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _passwordController,
+              controller: passwordController,
               style: const TextStyle(color: Colors.white),
               obscureText: true,
               decoration: const InputDecoration(
@@ -78,8 +98,14 @@ class Login extends StatelessWidget {
             const SizedBox(height: 30),
             SizedBox(
               child: ElevatedButton(
-                onPressed: () {
-                  // Implement login logic here
+                onPressed: () async {
+                  // TODO: Replace with the JWT returned by your backend
+                  await AuthService.instance.saveToken('DEMO_JWT_TOKEN');
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Home()),
+                  );
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
@@ -105,7 +131,12 @@ class Login extends StatelessWidget {
             SizedBox(
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement login logic here
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignUp()
+                      )
+                  );
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
