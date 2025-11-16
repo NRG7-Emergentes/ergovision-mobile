@@ -20,7 +20,8 @@ class NotificationListenerService {
       debugPrint("[WS Mobile] Already connected");
       return;
     }
-    final url = "https://ergovision-backend.onrender.com/ws-notifications?token=$token";
+    // Use secure WebSocket (wss) for mobile platforms
+    final url = "wss://ergovision-backend.onrender.com/ws-notifications?token=$token";
     debugPrint("[WS Mobile] Connecting to: $url");
     _client = StompClient(
       config: StompConfig(
