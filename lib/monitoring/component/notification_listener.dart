@@ -1,98 +1,124 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Agregar esta importación
 
 class NotificationListenerService {
-  static final NotificationListenerService _instance =
-  NotificationListenerService._internal();
-
+  static final NotificationListenerService _instance = NotificationListenerService._internal();
   StompClient? _client;
   Function(Map<String, dynamic>)? onNotification;
-
-  final ValueNotifier<Map<String, dynamic>?> latestNotification =
-  ValueNotifier<Map<String, dynamic>?>(null);
+  final ValueNotifier<Map<String, dynamic>?> latestNotification = ValueNotifier(null);
 
   factory NotificationListenerService() => _instance;
   NotificationListenerService._internal();
 
   bool get isConnected => _client?.connected ?? false;
-
-  /// NEW: userId actual
   int? _currentUserId;
 
-  Future<void> connect(String token) async {
-    if (isConnected) {
-      debugPrint("[WS Mobile] Already connected");
+  Future<void> connect() async { // Removí el parámetro token
+    if (isConnected) return;
+
+    // Cargar el token desde AuthService o SharedPreferences
+    final token = await _loadToken();
+    if (token == null) {
+      debugPrint('❌ No se pudo cargar el token');
       return;
     }
 
-    // EXTRAEMOS el userId del token
-    _currentUserId = getUserIdFromToken(token);
-    debugPrint("[WS Mobile] Extracted userId: $_currentUserId");
-
+    _currentUserId = _extractUserIdFromToken(token);
     final url = "ws://10.0.2.2:8080/ws-notifications";
-    debugPrint("[WS Mobile] Connecting to: $url");
 
     _client = StompClient(
       config: StompConfig(
         url: url,
         onConnect: _onConnect,
-        onWebSocketError: (error) => debugPrint("[WS Mobile] Error: $error"),
-        onDisconnect: (_) => debugPrint("[WS Mobile] Disconnected ❌"),
+        onWebSocketError: (_) => debugPrint("WebSocket error"),
+        onDisconnect: (_) => debugPrint("Disconnected"),
       ),
     );
 
     _client?.activate();
   }
 
-  void _onConnect(StompFrame frame) {
-    debugPrint("[WS Mobile] CONNECTED ✅");
+  // Nuevo método para cargar el token
+  Future<String?> _loadToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt');
+      debugPrint('🔐 Token loaded from storage: ${token != null ? "✓" : "✗"}');
+      return token;
+    } catch (e) {
+      debugPrint('❌ Error loading token: $e');
+      return null;
+    }
+  }
 
+  void _onConnect(StompFrame frame) {
+    debugPrint('✅ WebSocket connected successfully');
     _client?.subscribe(
       destination: "/topic/notifications",
       callback: (frame) {
         if (frame.body != null) {
           try {
             final data = json.decode(frame.body!);
-
-            debugPrint("[WS Mobile] Notification received: $data");
-
-            final notifUserId = data['userId'];
-
-            // FILTRO por userId
-            if (_currentUserId != null && notifUserId != _currentUserId) {
-              debugPrint(
-                  "[WS Mobile] Notification filtered out - intended for userId: $notifUserId, current: $_currentUserId");
-              return;
-            }
-
-            latestNotification.value = {
-              ...data,
-              '_receivedAt': DateTime.now(),
-            };
-
-            onNotification?.call(data);
+            _handleIncomingNotification(data);
           } catch (_) {
-            debugPrint("[WS Mobile] Error parsing notification");
+            debugPrint("Error parsing notification");
           }
         }
       },
     );
   }
 
-  // ----------- JWT Helpers -----------------
+  void _handleIncomingNotification(Map<String, dynamic> data) {
+    final notifUserId = data['userId'];
 
-  int? getUserIdFromToken(String token) {
+    debugPrint('🔔 Raw notification - UserID: $notifUserId, Current User: $_currentUserId, Title: ${data['title']}');
+
+    // Filtrado más robusto
+    if (_currentUserId != null && notifUserId != _currentUserId) {
+      debugPrint('🚫 Notification FILTERED - not for current user');
+      return;
+    }
+
+    if (_currentUserId == null) {
+      debugPrint('⚠️  Current userId is NULL - accepting all notifications');
+    } else {
+      debugPrint('✅ Notification ACCEPTED - for current user $_currentUserId');
+    }
+
+    // Usar postFrameCallback para evitar llamadas durante build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      latestNotification.value = {
+        ...data,
+        '_receivedAt': DateTime.now(),
+      };
+    });
+
+    onNotification?.call(data);
+  }
+
+  int? _extractUserIdFromToken(String token) {
     try {
+      debugPrint('🔐 Token received: ${token.substring(0, 20)}...'); // Solo mostrar parte del token por seguridad
+
       final parts = token.split('.');
-      if (parts.length != 3) return null;
+      if (parts.length != 3) {
+        debugPrint('❌ Invalid token format - expected 3 parts, got ${parts.length}');
+        return null;
+      }
 
       final payload = _decodeBase64(parts[1]);
       final payloadMap = json.decode(payload);
 
-      return payloadMap['userId'] ?? payloadMap['sub'];
+      debugPrint('🔍 Token payload: $payloadMap');
+
+      final userId = payloadMap['userId'] ?? payloadMap['sub'];
+      debugPrint('✅ Extracted userId: $userId');
+
+      return userId;
     } catch (e) {
-      debugPrint('Error decoding token: $e');
+      debugPrint('❌ Error decoding token: $e');
       return null;
     }
   }
@@ -101,77 +127,54 @@ class NotificationListenerService {
     String output = str.replaceAll('-', '+').replaceAll('_', '/');
 
     switch (output.length % 4) {
-      case 0:
-        break;
-      case 2:
-        output += '==';
-        break;
-      case 3:
-        output += '=';
-        break;
-      default:
-        throw Exception('Illegal base64url string!');
+      case 2: output += '=='; break;
+      case 3: output += '='; break;
+      default: break;
     }
 
     return utf8.decode(base64Url.decode(output));
   }
 
-  // -------------- SEND ---------------------
-
   void send(Map<String, dynamic> notif) {
-    if (!isConnected) {
-      debugPrint("[WS Mobile] Cannot send, not connected");
-      return;
-    }
-
+    if (!isConnected) return;
     _client?.send(destination: "/app/notify", body: jsonEncode(notif));
-    debugPrint("[WS Mobile] Notification sent: $notif");
   }
 
-  // -------------- DISCONNECT ---------------
-
   void disconnect() {
-    if (isConnected) {
-      debugPrint("[WS Mobile] Disconnecting WebSocket...");
-      _client?.deactivate();
-    }
+    if (isConnected) _client?.deactivate();
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// NOTIFICATION LISTENER WIDGET (sin cambios en tu lógica visual)
-// ════════════════════════════════════════════════════════════════════════════
 
 class NotificationListenerWidget extends StatefulWidget {
   const NotificationListenerWidget({super.key});
 
   @override
-  State<NotificationListenerWidget> createState() =>
-      _NotificationListenerWidgetState();
+  State<NotificationListenerWidget> createState() => _NotificationListenerWidgetState();
 }
 
-class _NotificationListenerWidgetState
-    extends State<NotificationListenerWidget> {
+class _NotificationListenerWidgetState extends State<NotificationListenerWidget> {
   Map<String, dynamic>? _current;
 
   @override
   void initState() {
     super.initState();
+    NotificationListenerService().onNotification = _handleNotification;
+  }
 
-    final service = NotificationListenerService();
+  void _handleNotification(Map<String, dynamic> data) {
+    final colors = _resolveColors(data);
 
-    service.onNotification = (data) {
-      final colors = _resolveColors(data);
-
-      setState(() {
-        _current = {
-          ...data,
-          '_receivedAt': DateTime.now(),
-          '_read': false,
-        };
-      });
-
+    // Usar postFrameCallback para evitar setState durante build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        setState(() {
+          _current = {
+            ...data,
+            '_receivedAt': DateTime.now(),
+          };
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_buildSnackText(data)),
@@ -180,23 +183,17 @@ class _NotificationListenerWidgetState
           ),
         );
       }
-    };
-  }
-
-  @override
-  void dispose() {
-    NotificationListenerService().onNotification = null;
-    super.dispose();
+    });
   }
 
   String _buildSnackText(Map<String, dynamic> n) {
-    final title = (n['title'] ?? '').toString();
-    final msg = (n['message'] ?? '').toString();
+    final title = n['title']?.toString() ?? '';
+    final msg = n['message']?.toString() ?? '';
     return title.isNotEmpty ? "$title: $msg" : msg;
   }
 
   _NotifColors _resolveColors(Map<String, dynamic> n) {
-    final title = (n['title'] ?? '').toString().toUpperCase();
+    final title = (n['title']?.toString() ?? '').toUpperCase();
 
     if (title.contains('ACTIVE')) {
       return _NotifColors(
@@ -225,10 +222,9 @@ class _NotificationListenerWidgetState
   }
 
   IconData _resolveIcon(Map<String, dynamic> n) {
-    final title = (n['title'] ?? '').toString().toUpperCase();
+    final title = (n['title']?.toString() ?? '').toUpperCase();
     if (title.contains('ACTIVE')) return Icons.play_arrow_rounded;
     if (title.contains('PAUSED')) return Icons.pause_circle_filled_rounded;
-    if (title.contains('ERROR')) return Icons.error_outline;
     return Icons.notifications;
   }
 
@@ -237,7 +233,6 @@ class _NotificationListenerWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final n = _current;
     return Card(
       color: const Color(0xFF1A2332),
       shape: RoundedRectangleBorder(
@@ -251,35 +246,21 @@ class _NotificationListenerWidgetState
           children: [
             const Text(
               "Live Notification",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            if (n == null)
-              const Text(
-                "Waiting for notification...",
-                style: TextStyle(color: Colors.white54),
-              )
-            else
-              _buildSingle(n),
+            _current == null
+                ? const Text("Waiting for notification...", style: TextStyle(color: Colors.white54))
+                : _buildNotificationCard(_current!),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSingle(Map<String, dynamic> n) {
+  Widget _buildNotificationCard(Map<String, dynamic> n) {
     final colors = _resolveColors(n);
-    final icon = _resolveIcon(n);
-    final time = n['_receivedAt'] is DateTime
-        ? _formatTime(n['_receivedAt'] as DateTime)
-        : '--:--:--';
-
-    final title = (n['title'] ?? 'Notification').toString();
-    final message = (n['message'] ?? '').toString();
+    final time = n['_receivedAt'] is DateTime ? _formatTime(n['_receivedAt'] as DateTime) : '--:--:--';
 
     return Container(
       decoration: BoxDecoration(
@@ -291,7 +272,7 @@ class _NotificationListenerWidgetState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: colors.accent, size: 28),
+          Icon(_resolveIcon(n), color: colors.accent, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -301,31 +282,18 @@ class _NotificationListenerWidgetState
                   children: [
                     Expanded(
                       child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        n['title']?.toString() ?? 'Notification',
+                        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                       ),
                     ),
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text(time, style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
                 ),
-                if (message.isNotEmpty) ...[
+                if ((n['message']?.toString() ?? '').isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
-                    message,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
+                    n['message']?.toString() ?? '',
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ],
               ],
@@ -335,17 +303,15 @@ class _NotificationListenerWidgetState
       ),
     );
   }
+
+  @override
+  void dispose() {
+    NotificationListenerService().onNotification = null;
+    super.dispose();
+  }
 }
 
 class _NotifColors {
-  final Color bg;
-  final Color border;
-  final Color accent;
-  final Color backgroundSnack;
-  _NotifColors({
-    required this.bg,
-    required this.border,
-    required this.accent,
-    required this.backgroundSnack,
-  });
+  final Color bg, border, accent, backgroundSnack;
+  _NotifColors({required this.bg, required this.border, required this.accent, required this.backgroundSnack});
 }
