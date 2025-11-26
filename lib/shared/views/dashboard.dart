@@ -24,9 +24,6 @@ class _DashboardState extends State<Dashboard> {
     _initializeNotifications();
   }
 
-  // ===========================================================================
-  // 🔥 Iniciar token + WebSocket (token + userId)
-  // ===========================================================================
   Future<void> _initializeNotifications() async {
     await AuthService.instance.loadToken();
 
@@ -36,14 +33,12 @@ class _DashboardState extends State<Dashboard> {
       return;
     }
 
-    // Limpieza del token
     final token = rawToken.replaceAll('"', '');
 
     debugPrint("[Dashboard] Connecting WebSocket with token: $token");
 
-    await _ws.connect(token);
+    NotificationListenerService().connect();
 
-    // Callback opcional
     _ws.onNotification = (data) {
       debugPrint("[Dashboard] WS Notification Received → $data");
     };
@@ -55,9 +50,7 @@ class _DashboardState extends State<Dashboard> {
     super.dispose();
   }
 
-  // ===========================================================================
-  // 🔥 UI
-  // ===========================================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,15 +71,11 @@ class _DashboardState extends State<Dashboard> {
 
             const SizedBox(height: 10),
 
-            // ================================
-            // 🟦 Active Pause + Real-time card
-            // ================================
             Column(
               children: [
                 ActivePause(),
                 const SizedBox(height: 8),
 
-                // 🔥 Ahora usamos la instancia singleton real
                 ValueListenableBuilder<Map<String, dynamic>?>(
                   valueListenable: _ws.latestNotification,
                   builder: (_, notif, __) {
@@ -166,14 +155,9 @@ class _DashboardState extends State<Dashboard> {
 
             const SizedBox(height: 10),
 
-            // 🔥 widget separado
             const NotificationListenerWidget(),
 
             const SizedBox(height: 10),
-
-            // =====================================================
-            // 🟦 Todo lo demás queda igual (cards, charts, etc.)
-            // =====================================================
 
             _buildWelcomeCard(),
             const SizedBox(height: 10),
@@ -189,10 +173,6 @@ class _DashboardState extends State<Dashboard> {
       ),
     );
   }
-
-  // ===================================================================
-  // 🔥 Tus widgets originales (sin cambios)
-  // ===================================================================
 
   Widget _buildWelcomeCard() {
     return SizedBox(
