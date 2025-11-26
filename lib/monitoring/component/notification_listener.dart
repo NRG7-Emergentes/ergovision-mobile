@@ -1,28 +1,38 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class NotificationListenerService {
   static final NotificationListenerService _instance =
-      NotificationListenerService._internal();
+  NotificationListenerService._internal();
+
   StompClient? _client;
   Function(Map<String, dynamic>)? onNotification;
-  // NEW: holds latest notification for listeners (Dashboard, ActivePause, etc.)
+
   final ValueNotifier<Map<String, dynamic>?> latestNotification =
-      ValueNotifier<Map<String, dynamic>?>(null);
+  ValueNotifier<Map<String, dynamic>?>(null);
+
   factory NotificationListenerService() => _instance;
   NotificationListenerService._internal();
+
   bool get isConnected => _client?.connected ?? false;
+
+  /// NEW: userId actual
+  int? _currentUserId;
 
   Future<void> connect(String token) async {
     if (isConnected) {
       debugPrint("[WS Mobile] Already connected");
       return;
     }
-    // Use secure WebSocket (wss) for mobile platforms
-    final url = "wss://ergovision-backend.onrender.com/ws-notifications?token=$token";
+
+    // EXTRAEMOS el userId del token
+    _currentUserId = getUserIdFromToken(token);
+    debugPrint("[WS Mobile] Extracted userId: $_currentUserId");
+
+    final url = "ws://10.0.2.2:8080/ws-notifications";
     debugPrint("[WS Mobile] Connecting to: $url");
+
     _client = StompClient(
       config: StompConfig(
         url: url,
@@ -31,22 +41,36 @@ class NotificationListenerService {
         onDisconnect: (_) => debugPrint("[WS Mobile] Disconnected ❌"),
       ),
     );
+
     _client?.activate();
   }
 
   void _onConnect(StompFrame frame) {
     debugPrint("[WS Mobile] CONNECTED ✅");
+
     _client?.subscribe(
       destination: "/topic/notifications",
       callback: (frame) {
         if (frame.body != null) {
           try {
             final data = json.decode(frame.body!);
+
             debugPrint("[WS Mobile] Notification received: $data");
+
+            final notifUserId = data['userId'];
+
+            // FILTRO por userId
+            if (_currentUserId != null && notifUserId != _currentUserId) {
+              debugPrint(
+                  "[WS Mobile] Notification filtered out - intended for userId: $notifUserId, current: $_currentUserId");
+              return;
+            }
+
             latestNotification.value = {
               ...data,
               '_receivedAt': DateTime.now(),
             };
+
             onNotification?.call(data);
           } catch (_) {
             debugPrint("[WS Mobile] Error parsing notification");
@@ -56,14 +80,55 @@ class NotificationListenerService {
     );
   }
 
+  // ----------- JWT Helpers -----------------
+
+  int? getUserIdFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+
+      final payload = _decodeBase64(parts[1]);
+      final payloadMap = json.decode(payload);
+
+      return payloadMap['userId'] ?? payloadMap['sub'];
+    } catch (e) {
+      debugPrint('Error decoding token: $e');
+      return null;
+    }
+  }
+
+  String _decodeBase64(String str) {
+    String output = str.replaceAll('-', '+').replaceAll('_', '/');
+
+    switch (output.length % 4) {
+      case 0:
+        break;
+      case 2:
+        output += '==';
+        break;
+      case 3:
+        output += '=';
+        break;
+      default:
+        throw Exception('Illegal base64url string!');
+    }
+
+    return utf8.decode(base64Url.decode(output));
+  }
+
+  // -------------- SEND ---------------------
+
   void send(Map<String, dynamic> notif) {
     if (!isConnected) {
       debugPrint("[WS Mobile] Cannot send, not connected");
       return;
     }
+
     _client?.send(destination: "/app/notify", body: jsonEncode(notif));
     debugPrint("[WS Mobile] Notification sent: $notif");
   }
+
+  // -------------- DISCONNECT ---------------
 
   void disconnect() {
     if (isConnected) {
@@ -73,8 +138,13 @@ class NotificationListenerService {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION LISTENER WIDGET (sin cambios en tu lógica visual)
+// ════════════════════════════════════════════════════════════════════════════
+
 class NotificationListenerWidget extends StatefulWidget {
   const NotificationListenerWidget({super.key});
+
   @override
   State<NotificationListenerWidget> createState() =>
       _NotificationListenerWidgetState();
@@ -83,18 +153,24 @@ class NotificationListenerWidget extends StatefulWidget {
 class _NotificationListenerWidgetState
     extends State<NotificationListenerWidget> {
   Map<String, dynamic>? _current;
+
   @override
   void initState() {
     super.initState();
+
     final service = NotificationListenerService();
-    // Replace previous list approach: always overwrite
+
     service.onNotification = (data) {
       final colors = _resolveColors(data);
-      setState(() => _current = {
-            ...data,
-            '_receivedAt': DateTime.now(),
-            '_read': false,
-          });
+
+      setState(() {
+        _current = {
+          ...data,
+          '_receivedAt': DateTime.now(),
+          '_read': false,
+        };
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -121,6 +197,7 @@ class _NotificationListenerWidgetState
 
   _NotifColors _resolveColors(Map<String, dynamic> n) {
     final title = (n['title'] ?? '').toString().toUpperCase();
+
     if (title.contains('ACTIVE')) {
       return _NotifColors(
         bg: const Color(0xFF0F2A1F),
@@ -129,6 +206,7 @@ class _NotificationListenerWidgetState
         backgroundSnack: const Color(0xFF1E664E),
       );
     }
+
     if (title.contains('PAUSED')) {
       return _NotifColors(
         bg: const Color(0xFF2A1F10),
@@ -137,6 +215,7 @@ class _NotificationListenerWidgetState
         backgroundSnack: const Color(0xFF7A5A14),
       );
     }
+
     return _NotifColors(
       bg: const Color(0xFF1A2332),
       border: const Color(0xFF2A3A4A),
@@ -173,9 +252,10 @@ class _NotificationListenerWidgetState
             const Text(
               "Live Notification",
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 10),
             if (n == null)
@@ -197,8 +277,10 @@ class _NotificationListenerWidgetState
     final time = n['_receivedAt'] is DateTime
         ? _formatTime(n['_receivedAt'] as DateTime)
         : '--:--:--';
+
     final title = (n['title'] ?? 'Notification').toString();
     final message = (n['message'] ?? '').toString();
+
     return Container(
       decoration: BoxDecoration(
         color: colors.bg,
@@ -215,29 +297,35 @@ class _NotificationListenerWidgetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                  Text(
-                    time,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                ]),
+                    Text(
+                      time,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
                 if (message.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
                     message,
                     style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400),
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ],
@@ -249,7 +337,6 @@ class _NotificationListenerWidgetState
   }
 }
 
-// Helper struct-like class for colors
 class _NotifColors {
   final Color bg;
   final Color border;
