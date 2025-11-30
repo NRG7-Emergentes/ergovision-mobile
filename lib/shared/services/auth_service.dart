@@ -1,21 +1,20 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ergovision/shared/client/api_client.dart';
+import 'package:ergovision/shared/models/sign_in_request.dart';
+import 'package:ergovision/shared/models/sign_up_request.dart';
+import 'package:http/http.dart' as http;
 
 class AuthService {
-  static final AuthService instance = AuthService._internal();
-  AuthService._internal();
-
-  String? _token;
-
-  String? get token => _token;
-
-  Future<void> saveToken(String token) async {
-    _token = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt', token);
+  Future<http.Response> signIn(SignInRequest request) async {
+    return await ApiClient.post(
+      'authentication/sign-in',
+      body: request.toJson(),
+    );
   }
 
-  Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('jwt');
+  Future<http.Response> signUp(SignUpRequest request) async {
+    return await ApiClient.post(
+      'authentication/sign-up',
+      body: request.toJson(),
+    );
   }
 }
