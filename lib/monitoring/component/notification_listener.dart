@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
-import 'package:ergovision/shared/client/api_client.dart';
 import 'package:ergovision/shared/services/user_service.dart';
 
 class NotificationListenerService {
@@ -11,9 +10,6 @@ class NotificationListenerService {
 
   final ValueNotifier<Map<String, dynamic>?> latestNotification = ValueNotifier(null);
   int? _currentUserId;
-
-  List<Map<String, dynamic>> userNotifications = [];
-  bool _notificationsFetched = false;
 
   factory NotificationListenerService() => _instance;
   NotificationListenerService._internal();
@@ -33,8 +29,6 @@ class NotificationListenerService {
     } catch (_) {
       _currentUserId = null;
     }
-
-    await fetchUserNotifications();
 
     _client = StompClient(
       config: StompConfig(
@@ -65,7 +59,6 @@ class NotificationListenerService {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       latestNotification.value = {...data, '_receivedAt': DateTime.now()};
-      userNotifications.insert(0, {...data, '_receivedAt': DateTime.now()});
     });
 
     onNotification?.call(data);
@@ -79,22 +72,6 @@ class NotificationListenerService {
 
   void disconnect() {
     if (isConnected) _client?.deactivate();
-  }
-
-  Future<void> fetchUserNotifications() async {
-    if (_currentUserId == null || _notificationsFetched) return;
-    try {
-      final response = await ApiClient.get('notifications/user/$_currentUserId');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        // Filtra notificaciones solo del usuario actual
-        userNotifications = data
-            .where((n) => n['userId'] == _currentUserId)
-            .cast<Map<String, dynamic>>()
-            .toList();
-        _notificationsFetched = true;
-      }
-    } catch (_) {}
   }
 }
 
@@ -112,12 +89,6 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
   void initState() {
     super.initState();
     NotificationListenerService().onNotification = _handleNotification;
-    _fetchNotifications();
-  }
-
-  Future<void> _fetchNotifications() async {
-    await NotificationListenerService().fetchUserNotifications();
-    setState(() {});
   }
 
   void _handleNotification(Map<String, dynamic> data) {
