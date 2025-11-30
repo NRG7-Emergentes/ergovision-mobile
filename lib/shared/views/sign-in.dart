@@ -176,10 +176,13 @@ class _SignInState extends State<SignIn> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SignUp()
-                            )
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider.value(
+                              value: context.read<AuthBloc>(),
+                              child: const SignUp(),
+                            ),
+                          ),
                         );
                       },
                       style: ButtonStyle(
