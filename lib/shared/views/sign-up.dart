@@ -68,6 +68,38 @@ class _SignUpState extends State<SignUp> {
     context.read<AuthBloc>().add(SignUpEvent(request: request));
   }
 
+  Future<void> handlePostSignIn() async {
+    final userService = UserService();
+    try {
+      final response = await userService.getUserProfile();
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        if (mounted) setState(() => isLoading = false);
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BlocProvider(
+                    create: (_) => UserBloc(userService: UserService()),
+                    child: const Home()
+                )
+            )
+        );
+      } else {
+        if (mounted) setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load user profile: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -82,15 +114,7 @@ class _SignUpState extends State<SignUp> {
               ),
             );
           } else if (state is SignInSuccess) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => BlocProvider(
-                        create: (_) => UserBloc(userService: UserService()),
-                        child: const Home()
-                    )
-                )
-            );
+            handlePostSignIn();
           } else if (state is AuthFailure) {
             setState(() => isLoading = false);
             ScaffoldMessenger.of(context).showSnackBar(

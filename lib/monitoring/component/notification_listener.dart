@@ -15,11 +15,11 @@ class NotificationListenerService {
   bool get isConnected => _client?.connected ?? false;
   int? _currentUserId;
 
-  Future<void> connect() async { // Removí el parámetro token
+  Future<void> connect(String _token) async { // Removí el parámetro token
     if (isConnected) return;
 
     // Cargar el token desde AuthService o SharedPreferences
-    final token = await _loadToken();
+    final token = _token;
     if (token == null) {
       debugPrint('❌ No se pudo cargar el token');
       return;
