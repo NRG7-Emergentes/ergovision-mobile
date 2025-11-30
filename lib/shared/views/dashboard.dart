@@ -1,5 +1,4 @@
-import 'package:ergovision/monitoring/component/active_pause.dart';
-import 'package:ergovision/monitoring/component/notification_listener.dart';
+import '../../monitoring/component/notification_listener.dart';
 import 'package:ergovision/shared/client/api_client.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -53,88 +52,11 @@ class _DashboardState extends State<Dashboard> {
                 )
             ),
             const SizedBox(height: 10),
-            // Active Pause + Real-time notification info merged
             Column(
               children: [
-                ActivePause(),
-                const SizedBox(height: 8),
-                ValueListenableBuilder<Map<String, dynamic>?>(
-                  valueListenable:
-                  NotificationListenerService().latestNotification,
-                  builder: (_, notif, __) {
-                    if (notif == null) {
-                      return const SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'No active notification',
-                          style: TextStyle(color: Colors.white54),
-                          textAlign: TextAlign.left,
-                        ),
-                      );
-                    }
-                    final title = (notif['title'] ?? '').toString();
-                    final msg = (notif['message'] ?? '').toString();
-                    return SizedBox(
-                      width: double.infinity,
-                      child: Card(
-                        color: const Color(0xFF1A2332),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: Color(0xFF2A3A4A),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                          child: Row(
-                            children: [
-                              Icon(
-                                title.toUpperCase().contains('PAUSED')
-                                    ? Icons.pause_circle_filled
-                                    : Icons.play_circle_fill,
-                                color: title.toUpperCase().contains('PAUSED')
-                                    ? Colors.amber
-                                    : Colors.greenAccent,
-                                size: 30,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title.isEmpty
-                                          ? 'Monitoring Update'
-                                          : title,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                    if (msg.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        msg,
-                                        style: const TextStyle(
-                                            color: Colors.white70, fontSize: 13),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                const NotificationListenerWidget(), // Sección de live notification restaurada
               ],
             ),
-            const SizedBox(height: 10),
-            // Notification widget (single latest)
-            const NotificationListenerWidget(),
             const SizedBox(height: 10),
             SizedBox(
                 width: double.infinity,

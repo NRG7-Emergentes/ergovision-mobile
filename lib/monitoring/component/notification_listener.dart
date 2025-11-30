@@ -19,7 +19,6 @@ class NotificationListenerService {
   Future<void> connect(String token) async {
     if (isConnected) return;
 
-    // Obtiene el id del usuario usando UserService
     try {
       final response = await UserService().getUserProfile();
       if (response.statusCode == 200) {
@@ -54,7 +53,6 @@ class NotificationListenerService {
 
   void _handleIncomingNotification(Map<String, dynamic> data) {
     final notifUserId = data['userId'];
-    // Solo procesa notificaciones del usuario autenticado
     if (_currentUserId == null || notifUserId != _currentUserId) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -84,15 +82,25 @@ class NotificationListenerWidget extends StatefulWidget {
 
 class _NotificationListenerWidgetState extends State<NotificationListenerWidget> {
   Map<String, dynamic>? _current;
+  int _pausesTaken = 0;
+  DateTime? _pauseStartTime;
+  late final ValueNotifier<Duration> _pauseDuration;
 
   @override
   void initState() {
     super.initState();
+    _pauseDuration = ValueNotifier(Duration.zero);
     NotificationListenerService().onNotification = _handleNotification;
   }
 
   void _handleNotification(Map<String, dynamic> data) {
-    final colors = _resolveColors(data);
+    final title = (data['title']?.toString() ?? '').toUpperCase();
+
+    if (title.contains('PAUSED')) {
+      _pausesTaken++;
+      _pauseStartTime = DateTime.now();
+      _startPauseTimer();
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -100,14 +108,18 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
       setState(() {
         _current = {...data, '_receivedAt': DateTime.now()};
       });
+    });
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_buildSnackText(data)),
-          backgroundColor: colors.backgroundSnack,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  void _startPauseTimer() {
+    if (_pauseStartTime == null) return;
+
+    Future.doWhile(() async {
+      if (!mounted || _pauseStartTime == null) return false;
+
+      await Future.delayed(const Duration(seconds: 1));
+      _pauseDuration.value = DateTime.now().difference(_pauseStartTime!);
+      return true;
     });
   }
 
@@ -158,28 +170,32 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
 
   @override
   Widget build(BuildContext context) {
-    // Elimina historial, solo muestra la notificación en tiempo real
     return Card(
-      color: const Color(0xFF1A2332),
+      elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFF2A3A4A), width: 2),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: const Color(0xFF2A3A4A).withOpacity(0.7), width: 2),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Live Notification",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            _current == null
-                ? const Text("Waiting for notification...", style: TextStyle(color: Colors.white54))
-                : _buildNotificationCard(_current!),
-          ],
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [const Color(0xFF1A2332), const Color(0xFF232B3E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
         ),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        child: _current == null
+            ? Row(
+                children: [
+                  Icon(Icons.notifications_none, color: Colors.white24, size: 32),
+                  const SizedBox(width: 12),
+                  const Text("Waiting for notification...", style: TextStyle(color: Colors.white54, fontSize: 16)),
+                ],
+              )
+            : _buildNotificationCard(_current!),
       ),
     );
   }
@@ -188,50 +204,74 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
     final colors = _resolveColors(n);
     final time = n['_receivedAt'] is DateTime ? _formatTime(n['_receivedAt']) : '--:--:--';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border, width: 1.2),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(_resolveIcon(n), color: colors.accent, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        n['title']?.toString() ?? 'Notification',
-                        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(time, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                  ],
-                ),
-                if ((n['message']?.toString() ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    n['message'] ?? '',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                ],
-              ],
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.accent.withOpacity(0.15),
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
+          padding: const EdgeInsets.all(10),
+          child: Icon(_resolveIcon(n), color: colors.accent, size: 36),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                n['title']?.toString() ?? 'Notification',
+                style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+              if ((n['message']?.toString() ?? '').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    n['message'] ?? '',
+                    style: const TextStyle(color: Colors.white70, fontSize: 15),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  time,
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ),
+              ),
+              if ((n['title']?.toString() ?? '').toUpperCase().contains('PAUSED')) ...[
+                ValueListenableBuilder<Duration>(
+                  valueListenable: _pauseDuration,
+                  builder: (context, duration, _) {
+                    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+                    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        "Pause Time: $minutes:$seconds",
+                        style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    "Pauses Taken: $_pausesTaken",
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   @override
   void dispose() {
+    _pauseDuration.dispose();
     NotificationListenerService().onNotification = null;
     super.dispose();
   }
