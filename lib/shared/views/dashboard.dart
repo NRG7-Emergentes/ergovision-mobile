@@ -1,8 +1,8 @@
 import 'package:ergovision/monitoring/component/active_pause.dart';
 import 'package:ergovision/monitoring/component/notification_listener.dart';
+import 'package:ergovision/shared/client/api_client.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:ergovision/shared/services/auth_service.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -24,8 +24,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> _initializeWebSocket() async {
-    // Clean quotes just in case
-    final token = AuthService.instance.token?.replaceAll('"', '');
+    final token = ApiClient.getToken();
     if (token != null && token.isNotEmpty) {
       await _wsService.connect(token);
     } else {
