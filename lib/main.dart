@@ -1,4 +1,7 @@
+import 'package:ergovision/monitoring/bloc/session/session_bloc.dart';
+import 'package:ergovision/monitoring/services/monitoring_service.dart';
 import 'package:ergovision/shared/bloc/auth/auth_bloc.dart';
+import 'package:ergovision/shared/bloc/user/user_bloc.dart';
 import 'package:ergovision/shared/services/auth_service.dart';
 import 'package:ergovision/shared/services/user_service.dart';
 import 'package:ergovision/shared/views/sign-in.dart';
@@ -27,11 +30,21 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-            create: (_) => AuthBloc(
-                  authService: AuthService(),
-                  userService: UserService(),
-            )
-        )
+          create: (_) => AuthBloc(
+            authService: AuthService(),
+            userService: UserService(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => UserBloc(
+            userService: UserService(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => SessionBloc(
+            monitoringService: MonitoringService(),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'ErgoVision',
