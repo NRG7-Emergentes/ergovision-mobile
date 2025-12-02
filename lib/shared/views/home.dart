@@ -7,6 +7,8 @@ import 'package:ergovision/shared/bloc/user/user_bloc.dart';
 import 'package:ergovision/shared/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ergovision/statistics/bloc/statistics_bloc.dart';
+import 'package:ergovision/statistics/services/statistics_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -27,8 +29,17 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => UserBloc(userService: UserService()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => UserBloc(userService: UserService()),
+        ),
+        BlocProvider(
+          create: (context) => StatisticsBloc(
+            statisticsService: StatisticsService(),
+          ),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: const Color(0xFF121720),
         body: Padding(
