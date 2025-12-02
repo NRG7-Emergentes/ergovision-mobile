@@ -3,7 +3,16 @@ import 'package:ergovision/configuration/views/profile.dart';
 import 'package:ergovision/monitoring/views/sessions.dart';
 import 'package:ergovision/shared/views/dashboard.dart';
 import 'package:ergovision/statistics/views/statistics.dart';
+import 'package:ergovision/shared/bloc/user/user_bloc.dart';
+import 'package:ergovision/shared/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ergovision/statistics/bloc/statistics_bloc.dart';
+import 'package:ergovision/statistics/services/statistics_service.dart';
+
+import '../../history/views/history_page.dart';
+import '../../history/bloc/history_bloc.dart';
+import '../../history/services/history_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,7 +25,7 @@ class _HomeState extends State<Home> {
   int currentIndex = 0;
   final List<Widget> pages = const [
     Dashboard(),
-    Sessions(),
+    HistoryPage(),
     Statistics(),
     Profile(),
     Settings()
@@ -24,26 +33,38 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121720),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 40, 20, 10),
-        child: pages[currentIndex],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
-        backgroundColor: const Color(0xFF1E2430),
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        onTap: (idx) => setState(() => currentIndex = idx),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.airplay), label: 'Sessions'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Statistics'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Profile'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => UserBloc(userService: UserService()),
+        ),
+        BlocProvider(
+          create: (context) => StatisticsBloc(
+            statisticsService: StatisticsService(),
+          ),
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: const Color(0xFF121720),
+        body: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 40, 20, 10),
+          child: pages[currentIndex],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: currentIndex,
+          backgroundColor: const Color(0xFF1E2430),
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.grey,
+          onTap: (idx) => setState(() => currentIndex = idx),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+            BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+            BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Statistics'),
+            BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Profile'),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          ],
+        ),
       ),
     );
   }

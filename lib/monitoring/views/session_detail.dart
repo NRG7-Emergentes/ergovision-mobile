@@ -1,7 +1,9 @@
+import 'package:ergovision/monitoring/bloc/session/session_bloc.dart';
+import 'package:ergovision/monitoring/bloc/session/session_event.dart';
+import 'package:ergovision/monitoring/bloc/session/session_state.dart';
 import 'package:ergovision/monitoring/model/session.dart';
 import 'package:flutter/material.dart';
-
-import '../data/sample_sessions.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SessionDetail extends StatefulWidget {
   final String sessionId;
@@ -13,27 +15,100 @@ class SessionDetail extends StatefulWidget {
 
 class _SessionDetailState extends State<SessionDetail> {
   @override
-  Widget build(BuildContext context) {
-    final Session session = sampleSessions.firstWhere((s) => s.id == widget.sessionId);
+  void initState() {
+    super.initState();
+    // Cargar el detalle de la sesión cuando se inicializa
+    context.read<SessionBloc>().add(FetchSessionDetailEvent(widget.sessionId));
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF121720),
       appBar: AppBar(
         backgroundColor: const Color(0xFF121720),
-        title: Text('Session Details',
-        style: const TextStyle(color: Colors.white)),
+        title: const Text(
+          'Session Details',
+          style: TextStyle(color: Colors.white),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: BlocBuilder<SessionBloc, SessionState>(
+        builder: (context, state) {
+          if (state is SessionLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.blue),
+            );
+          }
+
+          if (state is SessionError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Error',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.white54, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<SessionBloc>().add(
+                          FetchSessionDetailEvent(widget.sessionId),
+                        );
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (state is SessionDetailLoaded) {
+            return _buildSessionDetail(state.session);
+          }
+
+          return const Center(
+            child: Text(
+              'No session data available',
+              style: TextStyle(color: Colors.white54, fontSize: 16),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSessionDetail(Session session) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               const SizedBox(height: 10),
-              Text(
-                  'Session ID:',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              const Text(
+                'Session ID:',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -51,100 +126,27 @@ class _SessionDetailState extends State<SessionDetail> {
                     padding: const EdgeInsets.all(16.0),
                     child: Center(
                       child: Text(
-                        widget.sessionId,
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                        session.id,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
+              const Text(
                 'Overview:',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              /*
-              SizedBox(
-                width: double.infinity,
-                child: Card(
-                  color: const Color(0xFF1A2332),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(
-                      color: Color(0xFF2A3A4A),
-                      width: 2,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'Started on: ',
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Spacer(),
-                            SizedBox(
-                              child: Card(
-                                color: const Color(0xFF121720),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(
-                                    color: Color(0xFF2A3A4A),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Text(
-                                    formatDateTimeLocal(session.startDate),
-                                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const Text(
-                              'Ended on: ',
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Spacer(),
-                            SizedBox(
-                              child: Card(
-                                color: const Color(0xFF121720),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(
-                                    color: Color(0xFF2A3A4A),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Text(
-                                    formatDateTimeLocal(session.endDate),
-                                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 10),
-              */
               SizedBox(
                 width: double.infinity,
                 child: Card(
@@ -216,7 +218,7 @@ class _SessionDetailState extends State<SessionDetail> {
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -519,11 +521,11 @@ class _SessionDetailState extends State<SessionDetail> {
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
-      ),
+
     );
   }
 }

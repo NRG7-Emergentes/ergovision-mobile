@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "834230223250",
+    "project_id": "ergovision-mobile",
+    "storage_bucket": "ergovision-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834230223250:android:bc27492d1069895586c14b",
+        "android_client_info": {
+          "package_name": "com.nrg.ergovision"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGk_sXfmxVMX901xg6gCd7onQVCdb78Xk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
