@@ -53,10 +53,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAGk_sXfmxVMX901xg6gCd7onQVCdb78Xk',
-    appId: '1:834230223250:android:bc27492d1069895586c14b',
-    messagingSenderId: '834230223250',
-    projectId: 'ergovision-mobile',
-    storageBucket: 'ergovision-mobile.firebasestorage.app',
+    apiKey: 'AIzaSyDUfWIjIZrh_sxIhONcGCZoN55yKQ4jiQM',
+    appId: '1:415169226052:android:a7f0dad2c853fe2c452311',
+    messagingSenderId: '415169226052',
+    projectId: 'ergovision-final-mobile',
+    storageBucket: 'ergovision-final-mobile.firebasestorage.app',
   );
+
 }
