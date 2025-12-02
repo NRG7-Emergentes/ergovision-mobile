@@ -218,7 +218,7 @@ class _SessionDetailState extends State<SessionDetail> {
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -521,11 +521,11 @@ class _SessionDetailState extends State<SessionDetail> {
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
-      ),
+
     );
   }
 }

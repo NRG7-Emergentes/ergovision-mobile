@@ -1,3 +1,5 @@
+import 'package:ergovision/history/bloc/history_bloc.dart';
+import 'package:ergovision/history/services/history_service.dart';
 import 'package:ergovision/monitoring/bloc/session/session_bloc.dart';
 import 'package:ergovision/monitoring/services/monitoring_service.dart';
 import 'package:ergovision/shared/bloc/auth/auth_bloc.dart';
@@ -43,6 +45,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => SessionBloc(
             monitoringService: MonitoringService(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => HistoryBloc(
+            historyService: HistoryService(),
           ),
         ),
       ],
