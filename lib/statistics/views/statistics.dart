@@ -645,7 +645,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  ({List<String> months, List<double> values}) _getMonthlyData(List<MonthlyProgress> monthlyProgresses) {
+  ({List<String> months, List<double> values}) _getMonthlyData(List<MothlyProgress> monthlyProgresses) {
     if (monthlyProgresses.isEmpty) {
       return (
       months: ['May', 'June', 'July', 'August'],

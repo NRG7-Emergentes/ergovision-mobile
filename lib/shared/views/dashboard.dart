@@ -31,8 +31,12 @@ class _DashboardState extends State<Dashboard> {
 
   Future<void> _initializeWebSocket() async {
     final token = ApiClient.getToken();
-    if (token != null && token.isNotEmpty) {
-      await _wsService.connect(token);
+    if (token.isNotEmpty) {
+      try {
+        await _wsService.connect(token);
+      } catch (e) {
+        debugPrint("[Dashboard] WebSocket connection error: $e");
+      }
     } else {
       debugPrint("[Dashboard] No token found, WS not connected");
     }

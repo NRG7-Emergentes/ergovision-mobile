@@ -4,7 +4,7 @@ import 'daily_progress.dart';
 class Statistics {
   final int id;
   final int userId;
-  final List<MonthlyProgress> monthlyProgresses;
+  final List<MothlyProgress> monthlyProgresses;
   final List<DailyProgress> dailyProgresses;
   final double globalAverageScore;
   final double averageSessionTimeMinutes;
@@ -27,7 +27,7 @@ class Statistics {
       id: json['id'],
       userId: json['userId'],
       monthlyProgresses: (json['monthlyProgresses'] as List)
-          .map((item) => MonthlyProgress.fromJson(item))
+          .map((item) => MothlyProgress.fromJson(item))
           .toList(),
       dailyProgresses: (json['dailyProgresses'] as List)
           .map((item) => DailyProgress.fromJson(item))
