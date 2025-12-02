@@ -292,59 +292,7 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Card(
-                      color: const Color(0xFF1A2332),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(
-                          color: Color(0xFF2A3A4A),
-                          width: 2,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'MAIN FOCUS',
-                                      style: TextStyle(color: Colors.white54, fontSize: 14),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'Most Common Weak Point',
-                                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'Shoulder',
-                                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ]
-                              ),
-                            ),
-                            const Spacer(),
-                            SizedBox(
-                                child: Card(
-                                  color: const Color(0x66FFB900),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Icon(Icons.warning_amber_outlined, color: Color(0xFFFFB900)),
-                                  ),
-                                )
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+
                   SizedBox(
                     width: double.infinity,
                     child: Card(
@@ -478,10 +426,10 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // Funciones de utilidad
+
   double _getLastSessionScore(List<dynamic> dailyProgresses) {
     if (dailyProgresses.isEmpty) return 82.0;
-    // Tomar el primer registro (último día)
+
     return dailyProgresses.first.averageScore?.toDouble() ?? 82.0;
   }
 
@@ -595,7 +543,7 @@ class _DashboardState extends State<Dashboard> {
         .cast<double>()
         .toList();
 
-    // Completar si hay menos de 7 días
+    // Completar si hay menos de 7 días solo con ceros 
     while (values.length < 7) {
       values.add(0.0);
     }
