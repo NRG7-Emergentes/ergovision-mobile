@@ -1,3 +1,6 @@
+import '../../monitoring/component/notification_listener.dart';
+import 'package:ergovision/shared/client/api_client.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -298,44 +301,6 @@ class _DashboardState extends State<Dashboard> {
                         side: const BorderSide(
                           color: Color(0xFF2A3A4A),
                           width: 2,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'MAIN FOCUS',
-                                      style: TextStyle(color: Colors.white54, fontSize: 14),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'Most Common Weak Point',
-                                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'Shoulder',
-                                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ]
-                              ),
-                            ),
-                            const Spacer(),
-                            SizedBox(
-                                child: Card(
-                                  color: const Color(0x66FFB900),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Icon(Icons.warning_amber_outlined, color: Color(0xFFFFB900)),
-                                  ),
-                                )
-                            )
-                          ],
                         ),
                       ),
                     ),

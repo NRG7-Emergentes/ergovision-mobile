@@ -10,6 +10,8 @@ class NotificationListenerService {
 
   final ValueNotifier<Map<String, dynamic>?> latestNotification = ValueNotifier(null);
   int? _currentUserId;
+  String? _lastToken;
+  bool _isConnecting = false;
 
   factory NotificationListenerService() => _instance;
   NotificationListenerService._internal();
@@ -17,15 +19,23 @@ class NotificationListenerService {
   bool get isConnected => _client?.connected ?? false;
 
   Future<void> connect(String token) async {
-    if (isConnected) return;
+    if (isConnected || _isConnecting) {
+      debugPrint('[WebSocket] Already connected or connecting, skipping...');
+      return;
+    }
+
+    _isConnecting = true;
+    _lastToken = token;
 
     try {
       final response = await UserService().getUserProfile();
       if (response.statusCode == 200) {
         final user = json.decode(response.body);
         _currentUserId = user['id'];
+        debugPrint('[WebSocket] User ID retrieved: $_currentUserId');
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[WebSocket] Failed to get user profile: $e');
       _currentUserId = null;
     }
 
@@ -33,20 +43,52 @@ class NotificationListenerService {
       config: StompConfig(
         url: "ws://10.0.2.2:8080/ws-notifications",
         onConnect: _onConnect,
+        webSocketConnectHeaders: {
+          'Authorization': 'Bearer $token',
+        },
+        stompConnectHeaders: {
+          'Authorization': 'Bearer $token',
+        },
+        onWebSocketError: (dynamic error) {
+          debugPrint('[WebSocket] Error: $error');
+          _isConnecting = false;
+        },
+        onStompError: (StompFrame frame) {
+          debugPrint('[STOMP] Error: ${frame.body}');
+          _isConnecting = false;
+        },
+        onDisconnect: (StompFrame frame) {
+          debugPrint('[WebSocket] Disconnected');
+          _isConnecting = false;
+        },
+        connectionTimeout: const Duration(seconds: 10),
       ),
     );
 
-    _client?.activate();
+    try {
+      _client?.activate();
+      debugPrint('[WebSocket] Activation initiated');
+    } catch (e) {
+      debugPrint('[WebSocket] Failed to activate: $e');
+      _isConnecting = false;
+    }
   }
 
   void _onConnect(StompFrame frame) {
+    _isConnecting = false;
+    debugPrint('[WebSocket] Successfully connected!');
+    debugPrint('[WebSocket] Subscribing to /topic/notifications for userId: $_currentUserId');
+
     _client?.subscribe(
       destination: "/topic/notifications",
       callback: (frame) {
         if (frame.body == null) return;
         try {
+          debugPrint('[WebSocket] Received notification: ${frame.body}');
           _handleIncomingNotification(json.decode(frame.body!));
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[WebSocket] Error parsing notification: $e');
+        }
       },
     );
   }
@@ -65,11 +107,27 @@ class NotificationListenerService {
   void send(Map<String, dynamic> notif) {
     if (isConnected) {
       _client?.send(destination: "/app/notify", body: jsonEncode(notif));
+    } else {
+      debugPrint('[WebSocket] Cannot send, not connected');
     }
   }
 
   void disconnect() {
-    if (isConnected) _client?.deactivate();
+    debugPrint('[WebSocket] Disconnecting...');
+    if (_client != null) {
+      _client?.deactivate();
+      _client = null;
+    }
+    _isConnecting = false;
+  }
+
+  Future<void> reconnect() async {
+    debugPrint('[WebSocket] Reconnecting...');
+    disconnect();
+    if (_lastToken != null && _lastToken!.isNotEmpty) {
+      await Future.delayed(const Duration(seconds: 1));
+      await connect(_lastToken!);
+    }
   }
 }
 
