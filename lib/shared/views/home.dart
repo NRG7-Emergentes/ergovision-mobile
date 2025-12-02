@@ -1,11 +1,14 @@
 import 'package:ergovision/configuration/views/settings.dart';
 import 'package:ergovision/configuration/views/profile.dart';
+import 'package:ergovision/monitoring/views/sessions.dart';
 import 'package:ergovision/shared/views/dashboard.dart';
 import 'package:ergovision/statistics/views/statistics.dart';
 import 'package:ergovision/shared/bloc/user/user_bloc.dart';
 import 'package:ergovision/shared/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ergovision/statistics/bloc/statistics_bloc.dart';
+import 'package:ergovision/statistics/services/statistics_service.dart';
 
 import '../../history/views/history_page.dart';
 import '../../history/bloc/history_bloc.dart';
@@ -32,8 +35,14 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => UserBloc(userService: UserService())),
-        BlocProvider(create: (context) => HistoryBloc(historyService: HistoryService())),
+        BlocProvider(
+          create: (context) => UserBloc(userService: UserService()),
+        ),
+        BlocProvider(
+          create: (context) => StatisticsBloc(
+            statisticsService: StatisticsService(),
+          ),
+        ),
       ],
       child: Scaffold(
         backgroundColor: const Color(0xFF121720),
