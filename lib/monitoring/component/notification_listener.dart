@@ -94,14 +94,22 @@ class NotificationListenerService {
   }
 
   void _handleIncomingNotification(Map<String, dynamic> data) {
+    debugPrint('[WebSocket] Processing notification: $data');
     final notifUserId = data['userId'];
-    if (_currentUserId == null || notifUserId != _currentUserId) return;
+    debugPrint('[WebSocket] Notification userId: $notifUserId, Current userId: $_currentUserId');
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      latestNotification.value = {...data, '_receivedAt': DateTime.now()};
-    });
+    if (_currentUserId == null || notifUserId != _currentUserId) {
+      debugPrint('[WebSocket] Notification ignored - userId mismatch');
+      return;
+    }
 
+    // Update the ValueNotifier directly - this will trigger UI updates immediately
+    latestNotification.value = {...data, '_receivedAt': DateTime.now()};
+    debugPrint('[WebSocket] Notification ValueNotifier updated');
+
+    // Call the callback if registered
     onNotification?.call(data);
+    debugPrint('[WebSocket] Notification callback invoked');
   }
 
   void send(Map<String, dynamic> notif) {
@@ -152,21 +160,27 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
   }
 
   void _handleNotification(Map<String, dynamic> data) {
+    debugPrint('[Widget] Handling notification: $data');
     final title = (data['title']?.toString() ?? '').toUpperCase();
 
     if (title.contains('PAUSED')) {
       _pausesTaken++;
       _pauseStartTime = DateTime.now();
       _startPauseTimer();
+      debugPrint('[Widget] Pause detected, count: $_pausesTaken');
+    } else if (title.contains('ACTIVE')) {
+      // Reset pause timer when session becomes active
+      _pauseStartTime = null;
+      debugPrint('[Widget] Active state detected');
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
+    // Update state immediately
+    if (mounted) {
       setState(() {
         _current = {...data, '_receivedAt': DateTime.now()};
       });
-    });
+      debugPrint('[Widget] State updated with new notification');
+    }
   }
 
   void _startPauseTimer() {
