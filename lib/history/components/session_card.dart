@@ -83,11 +83,6 @@ class SessionCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.timer,
-                            color: Colors.white54,
-                            size: 16,
-                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Duration: ${session.duration}',
