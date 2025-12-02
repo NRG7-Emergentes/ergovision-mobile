@@ -41,7 +41,7 @@ class NotificationListenerService {
 
     _client = StompClient(
       config: StompConfig(
-        url: "ws://10.0.2.2:8080/ws-notifications",
+        url: "ws://ergovision-backend.onrender.com/ws-notifications",
         onConnect: _onConnect,
         webSocketConnectHeaders: {
           'Authorization': 'Bearer $token',
